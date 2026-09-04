@@ -1,27 +1,29 @@
 package edu.saihs.skills08.noteapptest
 
-import android.R
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
@@ -30,7 +32,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -42,12 +43,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.toColorInt
 import edu.saihs.skills08.noteapptest.ui.theme.NoteAppTestTheme
-import java.util.Calendar
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,9 +63,12 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun mainpage(viewModel: ModelView) {
-
     Scaffold(
-        topBar = {TopAppBar(colors = TopAppBarDefaults.topAppBarColors(Color.Red),title = {Text(viewModel.page)})},
+        topBar = {
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(Color.White),
+                title = { Text(viewModel.page) })
+        },
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
@@ -84,7 +85,7 @@ fun mainpage(viewModel: ModelView) {
                 )
             }
         }
-    ) {inner ->
+    ) { inner ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -102,17 +103,33 @@ fun mainpage(viewModel: ModelView) {
 
 @Composable
 fun read(viewModel: ModelView) {
-    val list: List<Notedata> = viewModel.read()
+    viewModel.read()
     Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn {
-            items(list) {
-                Card(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp)
-                    .combinedClickable{}) {
-                    Text(it.title, fontSize = 25.sp)
-                    Text(it.body, fontSize = 20.sp)
-                    Text(it.id.toString(), fontSize = 20.sp)
+            itemsIndexed(viewModel.list) {index,it ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp)
+                        .background(
+                            color = when (it.color) {
+                                1 -> Color.Red
+                                2 -> Color.Yellow
+                                3 -> Color.Blue
+                                4 -> Color.Green
+                                else -> {
+                                    Color.Transparent
+                                }
+                            }
+                        )
+                        .combinedClickable(onClick = {}, onDoubleClick = {viewModel.delete(it.id)})) {
+                    Column() {
+                        Text(it.title, fontSize = 25.sp)
+                        Text(it.body, fontSize = 20.sp)
+                        Text(it.time, fontSize = 20.sp)
+                        Text(it.id.toString(), fontSize = 20.sp)
+                    }
+
                 }
 
             }
@@ -126,6 +143,7 @@ fun read(viewModel: ModelView) {
 fun write(viewModel: ModelView) {
     var text1 by remember { mutableStateOf("") }
     var text2 by remember { mutableStateOf("") }
+    var choosecolor by remember { mutableStateOf(0) }
 
     var show by remember { mutableStateOf(false) }
     var timePickerState = rememberTimePickerState()
@@ -143,15 +161,51 @@ fun write(viewModel: ModelView) {
             value = text2,
             onValueChange = { text2 = it },
         )
-        OutlinedButton(onClick = {show=!show}) {Text("${timePickerState.hour} : ${timePickerState.minute}") }
         OutlinedButton(onClick = {
-            viewModel.write(Notedata(id = 1, title = text1, body = text2))
+            show = !show
+        }) { Text("${timePickerState.hour} : ${timePickerState.minute}") }
+        Row() {
+            for (i in 1..4) {
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .background(
+                            color = when (i) {
+                                1 -> Color.Red
+                                2 -> Color.Yellow
+                                3 -> Color.Blue
+                                4 -> Color.Green
+                                else -> {
+                                    Color.Transparent
+                                }
+                            }, shape = RoundedCornerShape(100.dp)
+                        )
+                        .clickable {
+                            choosecolor = i
+                        }
+                ) {
+                    if (i == choosecolor) {
+                        Icon(painterResource(R.drawable.baseline_check_24), null)
+                    }
+                }
+            }
+        }
+        OutlinedButton(onClick = {
+            viewModel.write(
+                Notedata(
+                    id = 1,
+                    title = text1,
+                    body = text2,
+                    time = "${timePickerState.hour}:${timePickerState.minute}",
+                    color = choosecolor
+                )
+            )
         }) {
             Text("in")
         }
-        if(show){
+        if (show) {
             AlertDialog(
-                onDismissRequest = {show=!show},
+                onDismissRequest = { show = !show },
                 content = {
                     Card() {
                         TimePicker(timePickerState, modifier = Modifier.padding(10.dp))

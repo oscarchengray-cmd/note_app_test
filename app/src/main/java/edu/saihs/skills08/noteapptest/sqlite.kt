@@ -14,10 +14,12 @@ class sql(context: Context) : SQLiteOpenHelper(context, "SQL", null, 1) {
         val id = "id"
         val title = "title"
         val body = "body"
+        val time="time"
+        val color="color"
     }
 
     override fun onCreate(p0: SQLiteDatabase) {
-        p0.execSQL("CREATE TABLE $tablename ($id INTEGER PRIMARY KEY AUTOINCREMENT ,$title TEXT, $body TEXT)")
+        p0.execSQL("CREATE TABLE $tablename ($id INTEGER PRIMARY KEY AUTOINCREMENT ,$title TEXT, $body TEXT,$time TEXT,$color INTEGER)")
     }
 
     override fun onUpgrade(
@@ -33,6 +35,8 @@ class sql(context: Context) : SQLiteOpenHelper(context, "SQL", null, 1) {
         this.writableDatabase.insert(tablename, null, ContentValues().apply {
             put(title, text.title)
             put(body, text.body)
+            put(time,text.time)
+            put(color,text.color)
         })
     }
 
@@ -42,8 +46,10 @@ class sql(context: Context) : SQLiteOpenHelper(context, "SQL", null, 1) {
         while (cursor.moveToNext()) {
             val title = cursor.getString(cursor.getColumnIndexOrThrow(title))
             val body = cursor.getString(cursor.getColumnIndexOrThrow(body))
+            val time = cursor.getString(cursor.getColumnIndexOrThrow(time))
+            val color= cursor.getInt(cursor.getColumnIndexOrThrow(color))
             val id = cursor.getInt(cursor.getColumnIndexOrThrow(id))
-            list += Notedata(title = title, body = body, id = id)
+            list += Notedata(title = title, body = body, id = id, time = time, color = color)
         }
         return list
     }
@@ -52,6 +58,8 @@ class sql(context: Context) : SQLiteOpenHelper(context, "SQL", null, 1) {
         this.writableDatabase.update(tablename, ContentValues().apply {
             put(title, text.title)
             put(body, text.body)
+            put(time,text.time)
+            put(color,text.color)
         }, "id=?", arrayOf(text.id.toString()))
     }
 

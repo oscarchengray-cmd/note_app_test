@@ -10,23 +10,41 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
 data class Notedata(
-    val id : Int,
+    val id: Int,
     val title: String,
-    val body: String
+    val body: String,
+    val time: String,
+    val color: Int
 )
 
-class ModelView(application: Application): AndroidViewModel(application){
+class ModelView(application: Application) : AndroidViewModel(application) {
+    var list: List<Notedata> by mutableStateOf(emptyList())
+
     var page by mutableStateOf("write")
-    fun read(): List<Notedata>{
-        var list: List<Notedata> by mutableStateOf(emptyList())
+    fun read(){
         viewModelScope.launch {
-            list=sql(application).read()
+            list = sql(application).read()
         }
-        return list
     }
-    fun write(text: Notedata){
+
+    fun write(text: Notedata) {
         viewModelScope.launch {
             sql(application).write(text)
         }
+        read()
+    }
+
+    fun upgrade(text: Notedata) {
+        viewModelScope.launch {
+            sql(application).upgrade(text)
+        }
+        read()
+    }
+
+    fun delete(deleteid: Int) {
+        viewModelScope.launch {
+            sql(application).delete(deleteid)
+        }
+        read()
     }
 }
